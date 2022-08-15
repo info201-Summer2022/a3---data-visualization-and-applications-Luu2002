@@ -7,8 +7,8 @@ library(usmapdata)
 # Filter the data for an better understanding
 df <- read.csv('incarceration_trends.csv') %>%
 select(year, state, county_name, total_pop, total_jail_pop, black_jail_pop, aapi_jail_pop, latinx_jail_pop, white_jail_pop) %>%
-  filter(year %in% c('2018'))%>%
-  filter(state %in% c('WY'))
+  filter(year %in% c(2015, 2016, 2017, 2018))%>%
+  filter(state %in% c('WA', 'OR', 'NY', 'WY', 'TN'))
 
 # Trends Over Time Chart
 # Number represent the total number of people in jail different year and in different states

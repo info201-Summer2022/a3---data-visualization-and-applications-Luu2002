@@ -2,11 +2,21 @@
 title: "index"
 author: "Luluu Chen"
 date: '2022-08-13'
-output: pdf_document
+output:
+  html_document:
+    df_print: paged
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r message = FALSE}
+library(plotly)
+library(dplyr)
+library(ggplot2)
+library(maps)
+library(usmapdata)
 ```
 
 ## Introduction 
@@ -17,34 +27,95 @@ Using incarceration collected by the Vera Institute, the variables I have chosen
 
 ## Paragraph of Summary
 
-### Total black jail population between the year of 2015 to 2018
+Total black jail population between the year of 2015 to 2018
 
-Comparing the total white jail population state such as New York has higher black in jail population. As in the other hand how state like Washington and Oregon having more population of white in jail
+* Comparing the total white jail population state such as New York has higher black in jail population. As in the other hand how state like Washington and Oregon having more population of white in jail
 
-### Total white jail population between the year of 2015 and 2018
+Total white jail population between the year of 2015 and 2018
 
-Tennessee has one of the highest white jail population of 71302 total together from year 2015 to 2018
+* Tennessee has one of the highest white jail population of 71302 total together from year 2015 to 2018
 
-### Ratio of total population between the aged 15-64 for each race every year after 2015 to 2018 
+Ratio of total population between the aged 15-64 for each race every year after 2015 to 2018 
 
-When I compared the ratios of each race to the overall population, I discovered that the year with the highest Black population ratio was 13.48% in the year of 2018
+* When I compared the ratios of each race to the overall population, I discovered that the year with the highest Black population ratio was 13.48% in the year of 2018
 
-### State that has the highest population in jail in the year of 2018 
+State that has the highest population in jail in the year of 2018 
 
-Within the selected states I have found that Tennesse has the highest jail population in the year of 2018 total of black and white race
+* Within the selected states I have found that Tennesse has the highest jail population in the year of 2018 total of black and white race
 
-### State that has the least jail population in the year of 2016
+State that has the least jail population in the year of 2016
 
-Within the selected states I have found that Wyomings has the least jail population in the year of 2016 total with of black and white race
+* Within the selected states I have found that Wyomings has the least jail population in the year of 2016 total with of black and white race
 
 ## Trends Over Time Chart
 
 The trends over time chart that I did was an bar chart in which it's showing the total number of people that was in jail within the selected states which are; NY, WA, OR, TN, and WY between the year of 2015 to 2018. By looking at the chart, I can clearly see how Tennesse has the overall highest jail population between 2015 to 2018. Also, by looking at the chart you can see how Washington State are increasing little each year from 2015 to 2018 and at the year of 2018 Washington has a total population in jail of 12,765
 
+```{r, echo = FALSE}
+states <- c('WA', 'OR', 'NY', 'WY','TN')
+total_2015 <- c(12264, 5675, 25975, 1540, 28010)
+total_2016 <- c(12319, 5649, 25821, 1534, 28698)
+total_2017 <- c(12556, 5487, 25821, 1527, 28513)
+total_2018 <- c(12765, 5493, 24253, 1540, 29404)
+df <- data.frame(states, total_2015, total_2016, total_2017, total_2018)
+
+fig <- plot_ly(df, x = ~states, y = ~total_2015, type = 'bar', name = '2015')
+fig <- fig %>% add_trace(y = ~total_2016, name = '2016')
+fig <- fig %>% add_trace(y = ~total_2017, name = '2017')
+fig <- fig %>% add_trace(y = ~total_2018, name = '2018')
+fig <- fig %>% layout(title = "Jail Population in Different States (2015 - 2018)",
+                      xaxis = list(title = "States"),
+                      yaxis = list (title = "Total Population"), barmode = 'group')
+fig
+```
+
 ## Comparison Chart 
 
 The comparison chart that I did was an stack bar chart in which it's showing an comparison between two race white and black. In the chart, it's showing the total number of black and white in jail from 2015 to 2018 in selected states which are also NY, WA, OR, TN, adn WY. By looking at the chart between the two races you can clearly see how in the year 2015 to 2018 Tennessee has the highest White jail population and compare to New York where it has the highest Black jail population.
 
+``` {r, echo = FALSE}
+location <- c('NY', 'TN', 'WA', 'OR', 'WY')
+race_Black <- c(45404, 40084, 7755, 2055, 591)
+race_White <- c(32659, 71302, 31096, 16097, 3947)
+df <- data.frame(location, race_Black, race_White)
+
+fig <- plot_ly(df, x = ~location, y = ~race_Black, type = 'bar', name = 'Black')
+fig <- fig %>% add_trace(y = ~race_White, name = 'White')
+fig <- fig %>% layout(title = "Jail Population Between Two Races (2015-2018)",
+                      xaxis = list(title = "States"),
+                      yaxis = list (title = "Jail Population"), barmode = 'stack')
+fig
+
+```
 ## Map
 
 The map that I did was an US map showing the population of Black in jail in the selected states in the US. In the map, you can see how CA, TX, AL, PA, ect are color for their black population within each state. On the side of the map it has a scale of the population from 0 to 5000 and how looking at the map CA has one of the highest comparing to the other selected states.
+
+```{r, echo = FALSE}
+# find population of black in jail in the usa
+df <- read.csv('incarceration_trends.csv') %>%
+  select(year, state, county_name, black_jail_pop)
+
+usa <- df %>% 
+  #select(year, black_jail_pop, state) %>%
+  filter(year %in% c(2018))
+usa_df <- usa %>%
+  group_by(state) %>%
+  summarise(black_jail_pop) %>%
+  arrange(desc(black_jail_pop))
+
+# change state to lower case
+s <- map_data('state')
+usa_df$state <- tolower(usa_df$state)
+dataframe <- merge(s, usa_df,
+                   by.x = "region",
+                   by.y = "state")
+
+ggplot(dataframe, aes(x = long, y = lat, group = group, fill = black_jail_pop)) +
+  geom_polygon(color = "pink") +
+  coord_map('polyconic') +
+  scale_fill_gradient2(low = "red", high = 'blue')+
+  theme_void() +
+  ggtitle('Black Population in Jail the Year of 2018')
+
+```
